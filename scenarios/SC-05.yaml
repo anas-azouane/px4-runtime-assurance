@@ -1,0 +1,9 @@
+id: SC-05
+requirement: SR-04
+mission: square_10m
+inject:
+  at_s: 25
+  fault: drop_telemetry
+expect:
+  action: TERMINATE
+  within_ms: 500

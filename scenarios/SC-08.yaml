@@ -1,0 +1,10 @@
+id: SC-08
+requirement: SR-08
+mission: fence_breach
+inject:
+  at_s: 1
+  fault: ignore_commands
+expect:
+  action: TERMINATE
+  from: fence_exit
+  within_ms: 1400

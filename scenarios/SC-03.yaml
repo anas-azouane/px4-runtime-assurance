@@ -1,0 +1,10 @@
+id: SC-03
+requirement: SR-03
+mission: square_10m
+inject:
+  at_s: 25
+  fault: low_battery
+expect:
+  action: RTL
+  within_ms: 500
+  acked: true

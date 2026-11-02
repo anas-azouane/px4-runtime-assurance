@@ -1,0 +1,10 @@
+id: SC-07
+requirement: SR-07
+mission: square_10m
+inject:
+  at_s: 25
+  fault: freeze_position
+expect:
+  action: LAND
+  within_ms: 1200
+  acked: true

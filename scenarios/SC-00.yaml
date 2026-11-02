@@ -1,0 +1,5 @@
+id: SC-00
+requirement: SR-05
+mission: square_10m
+expect:
+  action: NONE

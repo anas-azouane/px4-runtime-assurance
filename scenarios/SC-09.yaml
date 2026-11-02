@@ -1,0 +1,10 @@
+id: SC-09
+requirement: SR-02
+mission: square_10m
+inject:
+  at_s: 25
+  fault: nan_attitude
+expect:
+  action: LAND
+  within_ms: 200
+  acked: true

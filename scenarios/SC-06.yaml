@@ -1,0 +1,10 @@
+id: SC-06
+requirement: SR-06
+mission: square_10m
+inject:
+  at_s: 25
+  fault: position_jump
+expect:
+  action: TERMINATE
+  within_ms: 200
+  acked: true
