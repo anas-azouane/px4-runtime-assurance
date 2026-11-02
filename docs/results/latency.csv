@@ -1,0 +1,13 @@
+id,requirement,fault,expected,actions,latency_ms,limit_ms,rtf,ack
+SC-00,SR-05,none,NONE,,,,1.0,
+SC-01,SR-01,none,RTL,RTL,31.6,200,1.0,0
+SC-02,SR-02,corrupt_attitude,LAND,LAND > TERMINATE,59.0,200,1.0,0
+SC-03,SR-03,low_battery,RTL,RTL,18.4,500,1.0,0
+SC-04,SR-04,px4_hang,TERMINATE,TERMINATE,306.3,500,1.0,none
+SC-05,SR-04,drop_telemetry,TERMINATE,TERMINATE,308.8,500,1.0,0
+SC-06,SR-06,position_jump,TERMINATE,TERMINATE,36.8,200,1.0,0
+SC-07,SR-07,freeze_position,LAND,LAND,995.0,1200,0.999,0
+SC-08,SR-08,ignore_commands,TERMINATE,RTL > LAND > TERMINATE,1229.2,1400,1.0,none
+SC-09,SR-02,nan_attitude,LAND,LAND > TERMINATE,48.8,200,1.0,0
+SC-10,SR-05,gps_off,NONE,,,,0.999,
+SC-11,SR-02,motor_off,LAND,LAND > TERMINATE,342.1,,1.0,0

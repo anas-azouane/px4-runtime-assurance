@@ -1,0 +1,9 @@
+src/arbiter.c                                   49       49   100%
+src/rules/battery.c                             10       10   100%
+src/rules/envelope.c                             6        6   100%
+src/rules/geofence.c                            34       34   100%
+src/rules/liveness.c                             4        4   100%
+TOTAL                                          103      103   100%
+lines: 100.0% (103 out of 103)
+branches: 99.0% (103 out of 104)
+decisions: 100.0% (36 out of 36)
