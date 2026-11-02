@@ -59,10 +59,10 @@ GPS loss is in here because of what SC-10 showed. PX4 keeps publishing its estim
 at 50 Hz and starts a blind landing on its own, so there is nothing for the monitor
 to add. It also means the fence is checked against PX4's estimate, not raw GPS.
 
-**SR-06.** The guide's "breach that keeps growing". 30 m is well past anything PX4
+**SR-06.** For a breach that keeps growing. 30 m is well past anything PX4
 overshoots when told to return, so reaching it means the return is not working.
 
-**SR-07.** Added during design: a frozen position would otherwise pass the fence
+**SR-07.** A frozen position would otherwise pass the fence
 check forever. It lands instead of returning, because RTL needs the position that
 was just lost. 1000 ms is about 30 times the largest measured gap.
 

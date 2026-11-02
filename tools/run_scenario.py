@@ -128,7 +128,6 @@ def fault_onset(events, fault, t_inject):
 
 
 def fence_onset(events):
-    """First position sample north of the fence."""
     for e in events:
         if e["k"] == "pos" and (e["lat"] - FENCE_LAT0_E7) * 0.011131949 > FENCE_NORTH_M:
             return e["t"]

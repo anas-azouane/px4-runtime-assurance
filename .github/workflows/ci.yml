@@ -25,9 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: tools/fetch_deps.sh
-      - name: West workspace at Zephyr 4.4
+      - name: West workspace at Zephyr 4.4.2
         run: |
-          west init -m https://github.com/zephyrproject-rtos/zephyr --mr v4.4.0 /tmp/zp
+          west init -m https://github.com/zephyrproject-rtos/zephyr --mr v4.4.2 /tmp/zp
           cd /tmp/zp
           west update --narrow -o=--depth=1 zephyr cmsis_6 hal_stm32 open-amp libmetal picolibc
       - name: Cross-compile for the M4

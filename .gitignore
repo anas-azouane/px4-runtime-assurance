@@ -2,7 +2,7 @@
 __pycache__/
 third_party/
 build-fw/
-results/
+/results/
 monitor/host/monitor_host
 monitor/tests/test_monitor
 monitor/tests/cov/

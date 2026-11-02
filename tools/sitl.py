@@ -59,7 +59,6 @@ def logs():
 
 
 def px4_cmd(*args, check=True):
-    """Run a PX4 shell command in the running instance, e.g. px4_cmd('param', 'set', ...)."""
     cmd = ["docker", "exec", CONTAINER, f"{BIN}/px4-{args[0]}", *args[1:]]
     return subprocess.run(cmd, check=check, capture_output=True, text=True)
 
