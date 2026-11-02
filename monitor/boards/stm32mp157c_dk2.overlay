@@ -1,0 +1,24 @@
+/*
+ * The vrings and rpmsg buffers live in SRAM3, matching the vdev0vring0,
+ * vdev0vring1 and vdev0buffer reserved-memory nodes of the OpenSTLinux device
+ * tree. Zephyr's RAM stops short of them.
+ */
+/ {
+	chosen {
+		zephyr,ipc_shm = &mcusram3;
+		zephyr,ipc = &mailbox;
+	};
+
+	mcusram3: memory1@10040000 {
+		compatible = "mmio-sram";
+		reg = <0x10040000 DT_SIZE_K(64)>;
+	};
+};
+
+&mcusram {
+	reg = <0x10000000 DT_SIZE_K(256)>;
+};
+
+&mailbox {
+	status = "okay";
+};
