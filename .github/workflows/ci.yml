@@ -32,7 +32,7 @@ jobs:
           west update --narrow -o=--depth=1 zephyr cmsis_6 hal_stm32 open-amp libmetal picolibc
       - name: Cross-compile for the M4
         run: |
-          ZEPHYR_BASE=/tmp/zp/zephyr west -z /tmp/zp/zephyr build \
+          ZEPHYR_BASE=/tmp/zp/zephyr west build \
             -b stm32mp157c_dk2 -d build-fw monitor
       - uses: actions/upload-artifact@v4
         with:
