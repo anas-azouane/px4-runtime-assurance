@@ -10,6 +10,7 @@ import argparse
 import csv
 import json
 import math
+import os
 import shlex
 import subprocess
 import sys
@@ -301,6 +302,8 @@ def main():
             f"{result['id']} ok: {result['actions'] or 'no override'}"
             + (f" in {result['latency_ms']} ms" if result["latency_ms"] != "" else ""))
         print(status, flush=True)
+        if result["failure"] and os.environ.get("GITHUB_ACTIONS"):
+            print(f"::error title={result['id']}::{result['failure']}", flush=True)
         write_reports(results, args.out)
 
     return 1 if any(r["failure"] for r in results) else 0

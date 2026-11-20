@@ -67,6 +67,13 @@ jobs:
       - run: make -C monitor/host
       - name: Fly scenarios
         run: python tools/run_scenario.py scenarios/SC-*.yaml --out results
+      # Annotations are readable without signing in, unlike job logs and artifacts.
+      - name: Annotate PX4 logs of failed runs
+        if: failure()
+        run: |
+          for f in results/*.px4.log; do
+            tail -n 30 "$f" | python3 -c "import sys; t = sys.stdin.read().replace('%', '%25').replace('\\r', '').replace('\\n', '%0A'); print(f'::error title={sys.argv[1]}::{t}')" "$(basename "$f")"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
