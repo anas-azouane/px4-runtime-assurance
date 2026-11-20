@@ -120,13 +120,21 @@ def arm_and_start(link, timeout_s=90):
 
 
 def wait_disarmed(link, timeout_s, tick=None, min_flight_s=5):
-    """Wait for the flight to end. Returns True on disarm; tick() runs on every message."""
+    """
+    Wait for the flight to end. Returns True on disarm; tick() runs on every
+    message. Highest altitude seen is kept in link.peak_alt_m, because a failsafe
+    disarm on the ground looks the same as a landing.
+    """
     start = time.monotonic()
     while time.monotonic() - start < timeout_s:
         msg = link.recv_match(blocking=True, timeout=0.2)
         if tick is not None:
             tick()
-        if msg is None or msg.get_type() != "HEARTBEAT" or msg.get_srcComponent() != 1:
+        if msg is None or msg.get_srcComponent() != 1:
+            continue
+        if msg.get_type() == "GLOBAL_POSITION_INT":
+            link.peak_alt_m = max(getattr(link, "peak_alt_m", 0.0), msg.relative_alt / 1000)
+        if msg.get_type() != "HEARTBEAT":
             continue
         armed = msg.base_mode & M.MAV_MODE_FLAG_SAFETY_ARMED
         if not armed and time.monotonic() - start > min_flight_s:

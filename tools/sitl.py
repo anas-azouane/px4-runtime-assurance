@@ -1,4 +1,4 @@
-"""Start and stop a clean headless PX4 + Gazebo instance in Docker."""
+"""Start and stop a clean PX4 + Gazebo instance in Docker, headless unless asked."""
 import os
 import subprocess
 import time
@@ -35,12 +35,27 @@ def build():
     )
 
 
-def start(log_path=None):
+def _display():
+    """Docker flags that put the Gazebo window on this machine's X display."""
+    xauth = os.environ.get("XAUTHORITY", str(Path.home() / ".Xauthority"))
+    render_gid = os.stat("/dev/dri/renderD128").st_gid
+    return [
+        "-e", f"DISPLAY={os.environ['DISPLAY']}",
+        "-e", "XAUTHORITY=/tmp/.Xauthority",
+        "-v", "/tmp/.X11-unix:/tmp/.X11-unix",
+        "-v", f"{xauth}:/tmp/.Xauthority:ro",
+        "--device", "/dev/dri",
+        "--group-add", str(render_gid),
+        "--group-add", "video",
+    ]
+
+
+def start(gui=False):
     stop()
+    view = _display() if gui else ["-e", "HEADLESS=1"]
     subprocess.run(
         # --init: as PID 1, px4 would ignore the SIGSTOP that hang() sends it.
-        ["docker", "run", "-d", "--init", "--name", CONTAINER, *_docker_base(),
-         "-e", "HEADLESS=1",
+        ["docker", "run", "-d", "--init", "--name", CONTAINER, *_docker_base(), *view,
          "-e", "PX4_SYS_AUTOSTART=4001",
          "-e", "PX4_SIM_MODEL=gz_x500",
          "-e", "GZ_IP=127.0.0.1",

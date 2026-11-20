@@ -210,10 +210,10 @@ def judge(scenario, events, flight_error):
     return result
 
 
-def run_one(scenario, out_dir, board):
+def run_one(scenario, out_dir, board, gui=False):
     sid = scenario["id"]
     inj = scenario.get("inject")
-    sitl.start()
+    sitl.start(gui=gui)
     bench = Bench(board, out_dir / f"{sid}.jsonl")
     t_inject = None
     flight_error = None
@@ -287,13 +287,15 @@ def main():
     ap.add_argument("scenarios", nargs="+", type=Path)
     ap.add_argument("--out", type=Path, default=ROOT / "results")
     ap.add_argument("--board", help="user@ip of the MP157; default is the host build of the monitor")
+    ap.add_argument("--gui", action="store_true",
+                    help="show Gazebo; rendering adds load, so keep CI runs headless")
     args = ap.parse_args()
 
     args.out.mkdir(parents=True, exist_ok=True)
     results = []
     for path in sorted(args.scenarios):
         scenario = yaml.safe_load(path.read_text())
-        result = run_one(scenario, args.out, args.board)
+        result = run_one(scenario, args.out, args.board, args.gui)
         results.append(result)
         status = result["failure"] or (
             f"{result['id']} ok: {result['actions'] or 'no override'}"
