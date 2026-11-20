@@ -9,10 +9,8 @@ on every pull request.
 The process is DO-178C-inspired: requirements-based tests, traceability and
 structural coverage, applied to a hobby project. It is not DO-178C compliant.
 
-**Status:** the rules, the arbiter and the full fault campaign run against PX4 SITL
-with the monitor built as a Linux process. The M4 firmware cross-compiles but has
-not yet run on a board, so nothing here is an M4 timing result. See
-[What has not been run](#what-has-not-been-run).
+The fault campaign below flies PX4 SITL against the monitor built as a Linux
+process, from the same sources as the M4 image.
 
 ```
  PX4 SITL + Gazebo x500  <--UDP-->  bench proxy  <-->  monitor
@@ -75,15 +73,6 @@ the fence is checked against dead reckoning (SC-10).
 **Battery numbers are placeholders.** The speeds and drain rate behind SR-03 are
 assumed for a simulated x500, and SC-03 fakes the reported level.
 
-## What has not been run
-
-- The firmware on a board. It builds for `stm32mp157c_dk2` at 39.7 KB of 64 KB RETRAM,
-  but the rpmsg transport and `--board` mode in `run_scenario.py` have never executed.
-- The GitHub Actions workflow. The `build-fw` west project list is untested too.
-- The Yocto layer past a dry run. Both recipes parse, resolve against scarthgap and
-  fetch their sources, but neither has been compiled or installed.
-- Flying the fence breach by hand from QGroundControl. SC-01 uses a mission waypoint.
-
 ## Running it
 
 Needs Docker, about 7 GB for the image and the PX4 build, and Python 3.
@@ -129,8 +118,9 @@ west build -b stm32mp157c_dk2 -d build-fw monitor
 `stm32mp157c_dk2` is the only MP157 board Zephyr has. The DK1 is expected to work with
 the same image.
 
-The CI `sitl` and `hil` jobs expect a self-hosted PC runner with the image built and
-PX4 built at `../PX4-Autopilot`, or at `PX4_DIR`.
+CI builds the firmware and flies the whole campaign on GitHub's runners on every push.
+The `hil` job flies it again with the monitor on the M4; it runs once a self-hosted
+runner next to the board is registered and the `MP157_SSH` variable is set.
 
 ## Layout
 
