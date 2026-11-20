@@ -164,6 +164,7 @@ def main():
     from_monitor.robust_parsing = True
     corruptor = Corruptor()
     drop_commands = False
+    pending = b""
 
     emit("ready")
     while True:
@@ -192,19 +193,24 @@ def main():
             if data and not drop_commands:
                 px4.sendto(data, px4_addr)
         if sys.stdin in ready:
-            line = sys.stdin.readline()
-            if not line:
+            # os.read, not readline: two requests sent together would leave the
+            # second in Python's buffer, where select() never sees it.
+            data = os.read(sys.stdin.fileno(), 4096)
+            if not data:
                 return
-            request = json.loads(line)
-            if "mark" in request:
-                emit("mark", name=request["mark"])
-                continue
-            fault = request.get("fault")
-            if fault == "ignore_commands":
-                drop_commands = True
-            else:
-                corruptor.fault = fault
-            emit("fault", fault=fault)
+            pending += data
+            while b"\n" in pending:
+                line, pending = pending.split(b"\n", 1)
+                request = json.loads(line)
+                if "mark" in request:
+                    emit("mark", name=request["mark"])
+                    continue
+                fault = request.get("fault")
+                if fault == "ignore_commands":
+                    drop_commands = True
+                else:
+                    corruptor.fault = fault
+                emit("fault", fault=fault)
 
 
 if __name__ == "__main__":
