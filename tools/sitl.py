@@ -11,10 +11,25 @@ BIN = "/px4/build/px4_sitl_default/bin"
 
 # Run px4 directly rather than through `make px4_sitl gz_x500`: its -d flag
 # detaches from stdin, and a stale parameter file would leak state between runs.
+#
+# Gazebo is started here rather than by PX4, which gives it only 30 s. A CI
+# runner with no GPU renders in software and can take longer; PX4 then finds
+# the running world and uses it.
 START = """
 cd /px4/build/px4_sitl_default/rootfs
 rm -f parameters*.bson eeprom/* dataman
-exec ../bin/px4 -d
+. ./gz_env.sh
+gz sim --verbose=1 -r -s "$PX4_GZ_WORLDS/default.sdf" &
+[ -n "$HEADLESS" ] || gz sim -g > /dev/null 2>&1 &
+for i in $(seq 1 180); do
+    if gz service -i --service /world/default/scene/info 2>&1 | grep -q "Service providers"; then
+        echo "INFO  [sitl] Gazebo world up after $i s"
+        exec ../bin/px4 -d
+    fi
+    sleep 1
+done
+echo "ERROR [sitl] Gazebo world not up after 180 s"
+exit 1
 """
 
 
@@ -82,11 +97,14 @@ def hang():
     subprocess.run(["docker", "exec", CONTAINER, "pkill", "-STOP", "-x", "px4"], check=True)
 
 
-def wait_ready(timeout_s=120):
+def wait_ready(timeout_s=300):
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
-        if "Startup script returned successfully" in logs() or "Ready for takeoff" in logs():
+        out = logs()
+        if "Startup script returned successfully" in out or "Ready for takeoff" in out:
             return
+        if "ERROR [sitl]" in out:
+            break
         time.sleep(1)
     raise TimeoutError("PX4 did not start:\n" + logs()[-2000:])
 
