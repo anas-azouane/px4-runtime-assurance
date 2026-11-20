@@ -65,6 +65,26 @@ jobs:
         run: python tools/sitl.py
       - run: tools/fetch_deps.sh
       - run: make -C monitor/host
+      # Fails in minutes instead of once per scenario, and shows why.
+      - name: Check that SITL starts
+        env:
+          GZ_VERBOSE: "3"
+        run: |
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, "tools")
+          import sitl
+          sitl.start()
+          try:
+              sitl.wait_ready()
+              print(sitl.logs()[-3000:])
+          except TimeoutError:
+              log = sitl.logs()[-6000:].replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+              print(f"::error title=SITL start::{log}")
+              sys.exit(1)
+          finally:
+              sitl.stop()
+          PY
       - name: Fly scenarios
         run: python tools/run_scenario.py scenarios/SC-*.yaml --out results
       # Annotations are readable without signing in, unlike job logs and artifacts.

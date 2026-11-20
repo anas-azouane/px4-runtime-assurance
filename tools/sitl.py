@@ -19,13 +19,19 @@ START = """
 cd /px4/build/px4_sitl_default/rootfs
 rm -f parameters*.bson eeprom/* dataman
 . ./gz_env.sh
-gz sim --verbose=1 -r -s "$PX4_GZ_WORLDS/default.sdf" &
+gz sim --verbose=${GZ_VERBOSE:-1} -r -s "$PX4_GZ_WORLDS/default.sdf" 2>&1 &
+gz_pid=$!
 [ -n "$HEADLESS" ] || gz sim -g > /dev/null 2>&1 &
 for i in $(seq 1 180); do
-    if gz service -i --service /world/default/scene/info 2>&1 | grep -q "Service providers"; then
+    if ! kill -0 $gz_pid 2>/dev/null; then
+        echo "ERROR [sitl] Gazebo server exited"
+        exit 1
+    fi
+    if timeout 5 gz service -i --service /world/default/scene/info 2>&1 | grep -q "Service providers"; then
         echo "INFO  [sitl] Gazebo world up after $i s"
         exec ../bin/px4 -d
     fi
+    [ $((i % 15)) -eq 0 ] && echo "INFO  [sitl] waiting for Gazebo, $i s"
     sleep 1
 done
 echo "ERROR [sitl] Gazebo world not up after 180 s"
@@ -74,6 +80,7 @@ def start(gui=False):
          "-e", "PX4_SYS_AUTOSTART=4001",
          "-e", "PX4_SIM_MODEL=gz_x500",
          "-e", "GZ_IP=127.0.0.1",
+         "-e", f"GZ_VERBOSE={os.environ.get('GZ_VERBOSE', '1')}",
          IMAGE, "bash", "-c", START],
         check=True, stdout=subprocess.DEVNULL,
     )
@@ -85,7 +92,8 @@ def stop():
 
 
 def logs():
-    return subprocess.run(["docker", "logs", CONTAINER], capture_output=True, text=True).stdout
+    r = subprocess.run(["docker", "logs", CONTAINER], capture_output=True, text=True)
+    return r.stdout + r.stderr
 
 
 def px4_cmd(*args, check=True):
