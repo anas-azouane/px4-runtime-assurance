@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 IMAGE = os.environ.get("PX4_SITL_IMAGE", "px4-sitl:v1.16.2")
-PX4_DIR = Path(os.environ.get("PX4_DIR", Path(__file__).resolve().parents[2] / "PX4-Autopilot"))
+PX4_DIR = Path(os.environ.get("PX4_DIR", Path(__file__).parents[2] / "PX4-Autopilot")).resolve()
 CONTAINER = "px4-safety-sitl"
 BIN = "/px4/build/px4_sitl_default/bin"
 

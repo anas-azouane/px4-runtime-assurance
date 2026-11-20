@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - run: tools/fetch_deps.sh
       - run: pip install -r requirements.txt
       - name: Rule unit tests under ASan and UBSan
@@ -17,52 +20,63 @@ jobs:
       - name: Statement and decision coverage of rules/ and arbiter.c
         run: make -C monitor/tests coverage
       - name: Traceability
-        run: python3 tools/check_traceability.py
+        run: python tools/check_traceability.py
 
   build-fw:
     runs-on: ubuntu-latest
-    container: ghcr.io/zephyrproject-rtos/ci:v0.28.0
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get install -y ninja-build
+      - run: pip install west
       - run: tools/fetch_deps.sh
-      - name: West workspace at Zephyr 4.4.2
-        run: |
-          west init -m https://github.com/zephyrproject-rtos/zephyr --mr v4.4.2 /tmp/zp
-          cd /tmp/zp
-          west update --narrow -o=--depth=1 zephyr cmsis_6 hal_stm32 open-amp libmetal picolibc
       - name: Cross-compile for the M4
-        run: |
-          ZEPHYR_BASE=/tmp/zp/zephyr west build \
-            -b stm32mp157c_dk2 -d build-fw monitor
+        run: tools/build_fw.sh
       - uses: actions/upload-artifact@v4
         with:
           name: monitor-elf
           path: build-fw/zephyr/zephyr.elf
 
-  # Flies every scenario against the same sources built for the PC. Catches rule
-  # and escalation regressions on PRs from forks, which never reach the board.
+  # Flies every scenario against the monitor built for the PC. Everything is
+  # built from scratch each run, about 40 minutes in all.
   sitl:
-    runs-on: [self-hosted, px4-sitl]
+    runs-on: ubuntu-latest
     needs: unit
-    timeout-minutes: 60
+    timeout-minutes: 90
+    env:
+      PX4_DIR: ${{ github.workspace }}/../PX4-Autopilot
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch PX4 v1.16.2
+        run: |
+          git clone --branch v1.16.2 --depth 1 --recursive --shallow-submodules \
+            https://github.com/PX4/PX4-Autopilot.git "$PX4_DIR"
+          # The version script needs a NuttX tag, which a shallow clone leaves out.
+          git -C "$PX4_DIR/platforms/nuttx/NuttX/nuttx" fetch --depth 1 origin tag nuttx-12.12.0
+      - name: SITL image
+        run: docker build -t px4-sitl:v1.16.2 -f tools/sitl/Dockerfile "$PX4_DIR/Tools/setup"
+      - run: pip install -r requirements.txt
+      - name: Build PX4
+        run: python tools/sitl.py
       - run: tools/fetch_deps.sh
       - run: make -C monitor/host
-      - run: |
-          python3 -m venv .venv
-          .venv/bin/pip install -r requirements.txt
       - name: Fly scenarios
-        run: .venv/bin/python tools/run_scenario.py scenarios/SC-*.yaml --out results
+        run: python tools/run_scenario.py scenarios/SC-*.yaml --out results
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: sitl-results
           path: results/
 
-  # SITL is too heavy for the A7, so the PC runner hosts it and drives the board
-  # over SSH. Only this job measures the M4's real timing.
+  # Needs a self-hosted runner next to the board, so it only runs once the
+  # MP157_SSH repository variable is set.
   hil:
+    if: vars.MP157_SSH != ''
     runs-on: [self-hosted, px4-sitl, mp157-attached]
     needs: [build-fw, sitl]
     timeout-minutes: 60
