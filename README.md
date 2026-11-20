@@ -32,17 +32,17 @@ Latency runs from fault onset to the command reaching the proxy.
 | Scenario | Fault | Commands | Latency | Limit |
 |---|---|---|---|---|
 | SC-00 | none | none | | |
-| SC-01 | mission leaves the fence | RTL | 31.6 ms | 200 ms |
-| SC-02 | attitude corrupted to 69° | LAND, TERMINATE | 59.0 ms | 200 ms |
-| SC-03 | battery reported at 2 % | RTL | 18.4 ms | 500 ms |
-| SC-04 | PX4 frozen with SIGSTOP | TERMINATE | 306.3 ms | 500 ms |
-| SC-05 | telemetry dropped | TERMINATE | 308.8 ms | 500 ms |
-| SC-06 | position jumps 100 m | TERMINATE | 36.8 ms | 200 ms |
-| SC-07 | position stops updating | LAND | 995.0 ms | 1200 ms |
-| SC-08 | PX4 never receives commands | RTL, LAND, TERMINATE | 1229.2 ms | 1400 ms |
-| SC-09 | attitude is NaN | LAND, TERMINATE | 48.8 ms | 200 ms |
+| SC-01 | mission leaves the fence | RTL | 30.0 ms | 200 ms |
+| SC-02 | attitude corrupted to 69° | LAND, TERMINATE | 40.9 ms | 200 ms |
+| SC-03 | battery reported at 2 % | RTL | 12.0 ms | 500 ms |
+| SC-04 | PX4 frozen with SIGSTOP | TERMINATE | 308.8 ms | 500 ms |
+| SC-05 | telemetry dropped | TERMINATE | 309.8 ms | 500 ms |
+| SC-06 | position jumps 100 m | TERMINATE | 25.6 ms | 200 ms |
+| SC-07 | position stops updating | LAND | 991.8 ms | 1200 ms |
+| SC-08 | PX4 never receives commands | RTL, LAND, TERMINATE | 1238.8 ms | 1400 ms |
+| SC-09 | attitude is NaN | LAND, TERMINATE | 47.3 ms | 200 ms |
 | SC-10 | GPS lost in Gazebo | none, PX4 lands itself | | |
-| SC-11 | motor 2 cut in Gazebo | LAND, TERMINATE | 342.1 ms | |
+| SC-11 | motor 2 cut in Gazebo | LAND, TERMINATE | 348.5 ms | |
 
 The latencies come from one campaign on a desktop, so read them as a sanity check
 and not as a bound. SC-11 has no limit because its onset is the moment the parameter
@@ -104,6 +104,16 @@ make -C monitor/tests coverage GCOVR=$PWD/.venv/bin/gcovr
 make -C monitor/host
 .venv/bin/python tools/fly_mission.py
 .venv/bin/python tools/run_scenario.py scenarios/SC-*.yaml --out results
+```
+
+Add `--gui` to `run_scenario.py` or `fly_mission.py` to watch in the Gazebo window. Keep
+it off in CI: rendering adds load, and a run fails if the real-time factor drifts.
+
+To see the PX4 to monitor exchange of one run, with message rates, commands, acks and
+the monitor's state on one time axis:
+
+```sh
+.venv/bin/python tools/plot_timeline.py results/SC-04.jsonl sc04.png --window 2
 ```
 
 The Docker image exists because the machine this was built on runs Debian, and PX4's
