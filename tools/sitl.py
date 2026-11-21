@@ -80,6 +80,10 @@ def start(gui=False):
          "-e", "PX4_SYS_AUTOSTART=4001",
          "-e", "PX4_SIM_MODEL=gz_x500",
          "-e", "GZ_IP=127.0.0.1",
+         # Gazebo names its default partition after the user. A uid with no
+         # entry in the image (1001 on GitHub runners) has none, and its
+         # processes then never discover each other.
+         "-e", "GZ_PARTITION=px4_sitl",
          "-e", f"GZ_VERBOSE={os.environ.get('GZ_VERBOSE', '1')}",
          IMAGE, "bash", "-c", START],
         check=True, stdout=subprocess.DEVNULL,
